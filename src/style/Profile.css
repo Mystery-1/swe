@@ -1,0 +1,112 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(to bottom right, #f0f4f8, #f0f4f8);
+}
+
+.user-profile-sidebar {
+    height: 100vh;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #003366; /* Dark blue for a professional look */
+    transition: all 0.3s ease;
+}
+
+.user-profile-title {
+    font-size: 1.4rem;
+    margin-bottom: 30px;
+    margin-top: 50px;
+    font-weight: 600;
+}
+
+.user-profile-sidebar .nav-link {
+    font-size: 1.1rem;
+    padding: 12px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.user-profile-sidebar .nav-link:hover {
+    background-color: #001f4d; /* Slightly lighter blue for hover effect */
+    transform: translateX(5px);
+}
+
+.user-profile-main-content {
+    margin-left: 25%;
+    padding: 30px;
+}
+
+.user-profile-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid #0056b3; /* Adjusted color to match the theme */
+}
+
+.user-profile-card {
+    border-radius: 12px;
+    margin-left: 5px;
+    border: 1px solid #dfe4ea; /* Light border for subtle distinction */
+    background-color: #ffffff; /* Light background for better contrast */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 20px; /* Add spacing between cards */
+}
+
+.user-profile-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.user-profile-card-title {
+    color: #003366; /* Dark blue for consistency */
+    font-weight: 600;
+    margin-top: 30px;
+    margin-left: 35px !important;
+}
+
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 12px;
+    width: 90%;
+    margin-bottom: 10px !important;
+    margin-left: 5%;
+}
+
+.form-control:focus {
+    border-color: #0056b3;
+    box-shadow: 0 0 8px rgba(0, 86, 179, 0.2);
+}
+
+.btn-dark {
+    background-color: #0056b3; /* Consistent button color */
+    border: none;
+    font-weight: 600;
+    text-align: center;
+    align-items: center;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    padding: 12px;
+    width: 50%;
+    margin-left: 25% !important;
+    margin-bottom: 10px !important;
+}
+
+.btn-dark:hover {
+    background-color: #004080;
+    transform: translateY(-2px);
+}
+
+.form-label {
+    margin-left:35px !important;
+}
+
+.text-info {
+    margin-left: 45px !important;
+}
+.password-validations p {
+    margin-left: 5%;
+    font-size: 14px;
+  }
+  
