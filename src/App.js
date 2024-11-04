@@ -482,7 +482,7 @@ function App() {
             <Routes>
                 {/* Public Route */}
                 <Route
-                    path="/home"
+                    path="/"
                     element={
                         <>
                             <AuthComponents.AuthWrapper>
