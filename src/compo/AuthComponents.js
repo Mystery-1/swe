@@ -1,7 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
 
-// Animations
 const fadeIn = keyframes`
   from {
     opacity: 0 ;
@@ -31,7 +30,6 @@ const buttonHover = keyframes`
   }
 `;
 
-// Global Styles
 export const GlobalStyle = createGlobalStyle`
   body {
     background-color: #f0f2f5;
@@ -43,7 +41,6 @@ export const GlobalStyle = createGlobalStyle`
   }
 `;
 
-// Wrapper
 export const AuthWrapper = styled.div`
   display: flex;
   justify-content: center;
@@ -51,7 +48,6 @@ export const AuthWrapper = styled.div`
   min-height: 100vh;
 `;
 
-// Container
 export const AuthContainer = styled.div`
   background-color: #ffffff;
   border-radius: 12px;
@@ -77,7 +73,6 @@ export const AuthContainer = styled.div`
   }
 `;
 
-// SignIn Container
 export const AuthSignInContainer = styled.div`
   position: absolute;
   top: 0;
@@ -94,7 +89,6 @@ export const AuthSignInContainer = styled.div`
       : null}
 `;
 
-// SignUp Container
 export const AuthSignUpContainer = styled.div`
   position: absolute;
   top: 0;
@@ -114,7 +108,6 @@ export const AuthSignUpContainer = styled.div`
       : null}
 `;
 
-// Form
 export const AuthForm = styled.form`
   background-color: #ffffff;
   display: flex;
@@ -131,7 +124,6 @@ export const AuthForm = styled.form`
   }
 `;
 
-// Title
 export const AuthTitle = styled.h1`
   font-weight: 600;
   margin: 20px 0;
@@ -139,7 +131,6 @@ export const AuthTitle = styled.h1`
   color: ${(props) => props.customColor || '#333333'};
 `;
 
-// Input
 export const AuthInput = styled.input`
   background-color: #f0f2f5;
   border: 1px solid #d9d9d9;
@@ -154,12 +145,12 @@ export const AuthInput = styled.input`
 
   &:hover {
     border-color: #40a9ff;
-    background-color: #ffffff;
+    background-color: #f0f2f5;
   }
 
   &:focus {
     border-color: #40a9ff;
-    background-color: #ffffff;
+    background-color: #f0f2f5;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     outline: none;
   }
@@ -179,7 +170,6 @@ export const AuthInput = styled.input`
   }
 `;
 
-// Button
 export const AuthButton = styled.button`
   border-radius: 24px;
   border: none;
@@ -211,7 +201,6 @@ export const AuthButton = styled.button`
   }
 `;
 
-// Ghost Button
 export const AuthGhostButton = styled(AuthButton)`
   background-color: transparent;
   border: 2px solid #ffffff;
@@ -222,7 +211,6 @@ export const AuthGhostButton = styled(AuthButton)`
   }
 `;
 
-// Anchor
 export const AuthAnchor = styled.a`
   color: #1890ff;
   font-size: 14px;
@@ -235,7 +223,6 @@ export const AuthAnchor = styled.a`
   }
 `;
 
-// Overlay Container
 export const AuthOverlayContainer = styled.div`
   position: absolute;
   top: 0;
@@ -254,7 +241,6 @@ export const AuthOverlayContainer = styled.div`
   animation: ${slideInOverlay} 1s ease-in-out;
 `;
 
-// Overlay
 export const AuthOverlay = styled.div`
   background: linear-gradient(to right, #006BFF, #024CAA);
   color: #ffffff;
@@ -273,7 +259,6 @@ export const AuthOverlay = styled.div`
       : null}
 `;
 
-// Overlay Panels
 export const AuthOverlayPanel = styled.div`
   position: absolute;
   display: flex;
@@ -289,7 +274,6 @@ export const AuthOverlayPanel = styled.div`
   transition: transform 0.6s ease-in-out;
 `;
 
-// Left Overlay Panel
 export const AuthLeftOverlayPanel = styled(AuthOverlayPanel)`
   transform: translateX(-20%);
   padding: 0 0 0 0;
@@ -302,7 +286,6 @@ export const AuthLeftOverlayPanel = styled(AuthOverlayPanel)`
       : null}
 `;
 
-// Right Overlay Panel
 export const AuthRightOverlayPanel = styled(AuthOverlayPanel)`
   right: 0;
   transform: translateX(0);
@@ -322,7 +305,6 @@ export const AuthRightOverlayPanel = styled(AuthOverlayPanel)`
       : null}
 `;
 
-// Paragraph
 export const AuthParagraph = styled.p`
   font-size: 15px;
   font-weight: 300;
@@ -332,7 +314,6 @@ export const AuthParagraph = styled.p`
   color: #ffffff;
 `;
 
-// Message
 export const AuthMessage = styled.div`
   background-color: ${(props) => (props.type === 'success' ? '#d4edda' : '#f8d7da')};
   color: ${(props) => (props.type === 'success' ? '#155724' : '#721c24')};
@@ -348,7 +329,6 @@ export const AuthMessage = styled.div`
   animation: ${fadeIn} 0.5s ease-out;
 `;
 
-// Footer
 export const AuthFooter = styled.footer`
   background: #024CAA;
   color: #ffffff;
@@ -443,7 +423,6 @@ export const AuthFooter = styled.footer`
     }
   }
 `;
-// Wrapper for the validation messages
 export const ValidationWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -451,7 +430,6 @@ export const ValidationWrapper = styled.div`
   align-items: flex-start;
 `;
 
-// Individual validation message styling
 export const ValidationMessage = styled.p`
   font-size: 14px;  font-weight: 500;
   margin: 0;
