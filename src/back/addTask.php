@@ -1,30 +1,25 @@
 <?php
-// addTask.php
 
 header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *"); // Allow requests from any origin
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS"); // Allow specific request methods
-header("Access-Control-Allow-Headers: Content-Type"); // Allow specific headers
+header("Access-Control-Allow-Origin: *"); 
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS"); 
+header("Access-Control-Allow-Headers: Content-Type");
 
-// Include database configuration
 require 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['taskName']) && isset($_POST['taskDesc']) && isset($_POST['taskProi']) && isset($_POST['taskStat']) && isset($_POST['user_email'])) {
-    // Get the task details and user email
     $taskName = $_POST['taskName'];
     $taskDesc = $_POST['taskDesc'];
     $taskProi = $_POST['taskProi'];
     $taskStat = $_POST['taskStat'];
     $userEmail = $_POST['user_email'];
 
-    // Sanitize inputs
     $taskName = htmlspecialchars(strip_tags($taskName));
     $taskDesc = htmlspecialchars(strip_tags($taskDesc));
     $taskProi = htmlspecialchars(strip_tags($taskProi));
     $taskStat = htmlspecialchars(strip_tags($taskStat));
     $userEmail = htmlspecialchars(strip_tags($userEmail));
 
-    // SQL query to insert the task with the user email
     $sql = "INSERT INTO tasks (taskName, taskDesc, taskProi, taskStat, user_email) VALUES (?, ?, ?, ?, ?)";
 
     if ($stmt = $conn->prepare($sql)) {
