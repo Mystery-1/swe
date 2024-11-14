@@ -6,7 +6,6 @@
     <title>Login and Retrieve Email</title>
 </head>
 <body>
-    <!-- Login Form -->
     <form id="loginForm">
         <input type="email" id="email" placeholder="Email" required><br>
         <input type="password" id="password" placeholder="Password" required><br>
@@ -15,17 +14,14 @@
 
     <br>
 
-    <!-- Button to retrieve email -->
     <button onclick="getEmail()">Get Stored Email</button>
 
     <script>
-        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function (event) {
-            event.preventDefault();  // Prevent form from submitting traditionally
+            event.preventDefault(); 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            // Send login request to the server using fetch
             fetch('login.php', {
                 method: 'POST',
                 headers: {
@@ -39,7 +35,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Save the email in localStorage
                     localStorage.setItem('user_email', data.email);
                     alert('Login successful, email saved');
                 } else {
@@ -51,7 +46,6 @@
             });
         });
 
-        // Function to retrieve the email from localStorage
         function getEmail() {
             const email = localStorage.getItem('user_email');
             if (email) {
