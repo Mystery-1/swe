@@ -1,4 +1,3 @@
-/* Global Styles */
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
@@ -15,14 +14,13 @@ html, body {
     text-align: center;
     display: flex;
     width: 1440px;
-    justify-content: center; /* Center horizontally */
-    align-items: center;     /* Center vertically */
+    justify-content: center; 
+    align-items: center;    
     flex-direction: column;
-    height: 100vh;           /* Full viewport height */
+    height: 100vh;           
     background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
 }
 
-/* Main Section Styling */
 .dashboard-container {
     display: flex;
     justify-content: space-between;
@@ -30,12 +28,21 @@ html, body {
     width: 85%;
     max-width: 1200px;
     border-radius: 15px;
-
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Add a shadow for more emphasis */
-    padding: 20px; /* Add padding to prevent the content from touching the edges */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
+    padding: 20px;
 }
 
-.task-section,
+.task-section{
+    background-color: white;
+    padding: 40px;
+    border-radius: 15px;
+    width: 48%;
+    max-height: 500px;
+    margin: 2px;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transition: transform 0.3s ease;
+}
 .task-list-section {
     background-color: white;
     padding: 40px;
@@ -135,14 +142,13 @@ h2 {
     transform: translateY(-2px);
 }
 
-/* Task List Styling */
 .tasks-container {
     max-height: 450px;
     text-align: center;
     align-items: center;
     overflow-y: auto;
     padding-right: 15px;
-    margin-top: 20px; /* Add some margin */
+    margin-top: 20px; 
     border-radius: 10px;
     padding: 20px;
 }
@@ -226,13 +232,14 @@ h2 {
 }
 
 
-/* No Tasks Message */
 .no-tasks-message {
     color: #6b7280;
     font-style: italic;
 }
 
-/* Tooltips */
+.pt{
+text-align: left;
+}
 [data-tooltip] {
     position: relative;
 }
