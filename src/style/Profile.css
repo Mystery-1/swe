@@ -9,7 +9,7 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    background-color: #003366; /* Dark blue for a professional look */
+    background-color: #003366; 
     transition: all 0.3s ease;
 }
 
@@ -28,7 +28,7 @@ body {
 }
 
 .user-profile-sidebar .nav-link:hover {
-    background-color: #001f4d; /* Slightly lighter blue for hover effect */
+    background-color: #001f4d; 
     transform: translateX(5px);
 }
 
@@ -41,17 +41,17 @@ body {
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    border: 3px solid #0056b3; /* Adjusted color to match the theme */
+    border: 3px solid #0056b3; 
 }
 
 .user-profile-card {
     border-radius: 12px;
     margin-left: 5px;
-    border: 1px solid #dfe4ea; /* Light border for subtle distinction */
-    background-color: #ffffff; /* Light background for better contrast */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    border: 1px solid #dfe4ea; 
+    background-color: #ffffff; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    margin-bottom: 20px; /* Add spacing between cards */
+    margin-bottom: 20px; 
 }
 
 .user-profile-card:hover {
@@ -60,7 +60,7 @@ body {
 }
 
 .user-profile-card-title {
-    color: #003366; /* Dark blue for consistency */
+    color: #003366; 
     font-weight: 600;
     margin-top: 30px;
     margin-left: 35px !important;
@@ -81,7 +81,7 @@ body {
 }
 
 .btn-dark {
-    background-color: #0056b3; /* Consistent button color */
+    background-color: #0056b3;
     border: none;
     font-weight: 600;
     text-align: center;
