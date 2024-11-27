@@ -1,36 +1,54 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import '../style/s2.css';
-import {
-  FaClock,
-  FaHourglassHalf,
-  FaCheckCircle,
-  FaClipboardCheck,
-  FaEye,
-  FaEyeSlash,
-  FaEdit,
-  FaSave,
-  FaTimes,
-} from 'react-icons/fa';
-import { FaFlag, FaCommentDots } from 'react-icons/fa';
+import { FaClock, FaHourglassHalf, FaClipboardCheck } from 'react-icons/fa';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function CircularProgress({ value }) {
   const radius = 54;
+  const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (value / 100) * circumference;
 
   return (
-    <svg className="ts-progress-circle" viewBox="0 0 120 120">
-      <circle className="ts-progress-bg" cx="60" cy="60" r="54" />
+    <svg
+      className="ts-progress-circle"
+      viewBox="0 0 120 120"
+      width="120"
+      height="120"
+    >
       <circle
-        className="ts-progress-bar"
-        cx="60" cy="60" r="54"
-        style={{ strokeDashoffset }}
+        cx="50%"
+        cy="50%"
+        r={radius}
+        strokeWidth={strokeWidth}
+        fill="none"
+        stroke="#e6e6e6"
+        style={{ strokeLinecap: 'round' }}
+      />
+      <circle
+        cx="50%"
+        cy="50%"
+        r={radius}
+        strokeWidth={strokeWidth}
+        fill="none"
+        stroke="#007BFF"
+        strokeDasharray={circumference}
+        strokeDashoffset={strokeDashoffset}
+        style={{
+          strokeLinecap: 'round',
+          transform: 'rotate(-90deg)',
+          transformOrigin: 'center',
+        }}
       />
       <text
-        x="50%" y="50%"
-        className="ts-progress-text"
+        x="50%"
+        y="50%"
         dominantBaseline="middle"
         textAnchor="middle"
+        fontSize="18"
+        fill="#333"
+        fontWeight="bold"
       >
         {Math.round(value)}%
       </text>
@@ -38,218 +56,176 @@ function CircularProgress({ value }) {
   );
 }
 
+function assignStartTimeAndDuration(tasks) {
+  const startingHour = 12; // Tasks start at 12:00 PM
+  const startingMinute = 0;
+  const defaultDuration = 30; // Default duration in minutes for tasks
+  const taskGap = 5; // Gap in minutes between tasks
+
+  // Group tasks by priority
+  const highPriorityTasks = tasks.filter(task => task.priority === 'High');
+  const lowPriorityTasks = tasks.filter(task => task.priority === 'Low');
+  const mediumPriorityTasks = tasks.filter(task => task.priority === 'Medium');
+
+  // Arrange tasks in the specified pattern
+  const arrangedTasks = [];
+  let highIndex = 0,
+    lowIndex = 0,
+    mediumIndex = 0;
+
+  while (
+    highIndex < highPriorityTasks.length ||
+    lowIndex < lowPriorityTasks.length ||
+    mediumIndex < mediumPriorityTasks.length
+  ) {
+    if (highIndex < highPriorityTasks.length) {
+      arrangedTasks.push(highPriorityTasks[highIndex++]);
+    }
+    if (lowIndex < lowPriorityTasks.length) {
+      arrangedTasks.push(lowPriorityTasks[lowIndex++]);
+    }
+    if (mediumIndex < mediumPriorityTasks.length) {
+      arrangedTasks.push(mediumPriorityTasks[mediumIndex++]);
+    }
+    if (mediumIndex < mediumPriorityTasks.length) {
+      arrangedTasks.push(mediumPriorityTasks[mediumIndex++]);
+    }
+  }
+
+  let currentTime = new Date();
+  currentTime.setHours(startingHour, startingMinute, 0, 0); // Set start time to 12:00 PM
+
+  return arrangedTasks.map(task => {
+    const startTime = new Date(currentTime);
+
+    // Assign task duration based on priority
+    let duration;
+    switch (task.priority) {
+      case 'High':
+        duration = 120; // 2 hours for high-priority tasks
+        break;
+      case 'Medium':
+        duration = 75; // 1 hour 15 minutes for medium-priority tasks
+        break;
+      case 'Low':
+        duration = 40; // 40 minutes for low-priority tasks
+        break;
+      default:
+        duration = defaultDuration;
+    }
+
+    // Update current time for the next task
+    currentTime.setMinutes(currentTime.getMinutes() + duration + taskGap);
+
+    // Format the start time as a string (e.g., "12:00 PM")
+    const formattedStartTime = startTime.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return {
+      ...task,
+      time: formattedStartTime, // Assign formatted start time
+      duration, // Assign duration
+    };
+  });
+}
+
+
 function TaskSchedule() {
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      name: 'Budget Review Meeting',
-      description: 'Analyze budget allocation for Q4 and adjust expenses as needed.',
-      time: '08:30 AM',
-      priority: 'High',
-      duration: 60,
-      finished: false,
-    },
-    {
-      id: 2,
-      name: 'Design Brainstorm Session',
-      description: 'Collaborate with the design team on new product ideas.',
-      time: '09:45 AM',
-      priority: 'Medium',
-      duration: 90,
-      finished: false,
-    },
-    {
-      id: 3,
-      name: 'Email Follow-ups',
-      description: 'Respond to pending emails and reach out to stakeholders.',
-      time: '11:00 AM',
-      priority: 'Low',
-      duration: 45,
-      finished: false,
-    },
-    {
-      id: 4,
-      name: 'Lunch Break',
-      description: 'Enjoy lunch and take a break from work.',
-      time: '12:30 PM',
-      priority: 'Low',
-      duration: 60,
-      finished: false,
-    },
-    {
-      id: 5,
-      name: 'Client Feedback Call',
-      description: 'Call with client to gather feedback on recent deliverables.',
-      time: '02:00 PM',
-      priority: 'High',
-      duration: 45,
-      finished: false,
-    },
-    {
-      id: 6,
-      name: 'Social Media Strategy Meeting',
-      description: 'Discuss plans for upcoming social media campaigns.',
-      time: '03:15 PM',
-      priority: 'Medium',
-      duration: 60,
-      finished: false,
-    },
-    {
-      id: 7,
-      name: 'Technical Workshop',
-      description: 'Attend an internal workshop on new software tools.',
-      time: '04:30 PM',
-      priority: 'Low',
-      duration: 90,
-      finished: false,
-    },
-    {
-      id: 8,
-      name: 'Yoga Session',
-      description: 'Participate in a virtual yoga session for relaxation.',
-      time: '06:00 PM',
-      priority: 'Low',
-      duration: 60,
-      finished: false,
-    },
-    {
-      id: 9,
-      name: 'Family Time',
-      description: 'Spend quality time with family in the evening.',
-      time: '07:30 PM',
-      priority: 'High',
-      duration: 90,
-      finished: false,
-    },
-    {
-      id: 10,
-      name: 'Project Documentation',
-      description: 'Update project documentation for recent changes.',
-      time: '09:00 PM',
-      priority: 'Medium',
-      duration: 45,
-      finished: false,
-    },
-    {
-      id: 11,
-      name: 'Daily Reflection',
-      description: 'Reflect on the day’s activities and accomplishments.',
-      time: '10:00 PM',
-      priority: 'Low',
-      duration: 20,
-      finished: false,
-    },
-    {
-      id: 12,
-      name: 'Prepare for Next Week',
-      description: 'Plan and organize tasks for the upcoming week.',
-      time: '10:30 PM',
-      priority: 'Medium',
-      duration: 60,
-      finished: false,
-    },
-    {
-      id: 13,
-      name: 'Meditation',
-      description: 'Engage in a 30-minute meditation session before sleep.',
-      time: '11:45 PM',
-      priority: 'Low',
-      duration: 30,
-      finished: false,
-    },
-    {
-      id: 14,
-      name: 'Morning Exercise',
-      description: 'Start the day with a 30-minute exercise routine.',
-      time: '07:00 AM',
-      priority: 'High',
-      duration: 30,
-      finished: false,
-    },
-    {
-      id: 15,
-      name: 'Team Standup',
-      description: 'Daily team standup to discuss progress and blockers.',
-      time: '09:00 AM',
-      priority: 'High',
-      duration: 30,
-      finished: false,
-    },
-    {
-      id: 16,
-      name: 'Coffee Break',
-      description: 'Quick coffee break to recharge.',
-      time: '03:00 PM',
-      priority: 'Low',
-      duration: 15,
-      finished: false,
-    },
-    {
-      id: 17,
-      name: 'Report Analysis',
-      description: 'Analyze the quarterly performance report.',
-      time: '01:30 PM',
-      priority: 'Medium',
-      duration: 60,
-      finished: false,
-    },
-    {
-      id: 18,
-      name: 'Check Emails',
-      description: 'Review and respond to emails received during the day.',
-      time: '05:30 PM',
-      priority: 'Low',
-      duration: 30,
-      finished: false,
-    },
-    {
-      id: 19,
-      name: 'Brainstorm Session',
-      description: 'Brainstorm new ideas for the upcoming campaign.',
-      time: '04:00 PM',
-      priority: 'Medium',
-      duration: 45,
-      finished: false,
-    },
-    {
-      id: 20,
-      name: 'Client Call',
-      description: 'Discuss project updates and timelines with the client.',
-      time: '02:30 PM',
-      priority: 'High',
-      duration: 30,
-      finished: false,
-    },  ]);
-
+  const [tasks, setTasks] = useState([]);
   const [finishedTasks, setFinishedTasks] = useState([]);
-  const [isFinishedTasksOpen, setIsFinishedTasksOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [feedback, setFeedback] = useState({});
-  const [feedbackEditing, setFeedbackEditing] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const parseTime = (timeStr) => {
-    const [time, modifier] = timeStr.split(' ');
-    let [hours, minutes] = time.split(':');
-    if (modifier === 'PM' && hours !== '12') {
-      hours = parseInt(hours, 10) + 12;
-    }
-    if (modifier === 'AM' && hours === '12') {
-      hours = 0;
-    }
-    return new Date().setHours(hours, minutes, 0, 0);
-  };
+  useEffect(() => {
+    // Simulate a 3-second loading delay
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const userEmail = localStorage.getItem('user_email');
+      if (!userEmail) {
+        toast.error('User email is missing.', {
+          position: 'bottom-right',
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      const taskData = new FormData();
+      taskData.append('user_email', userEmail);
+
+      try {
+        const response = await fetch(
+          'http://localhost/SWE-444/my-app/src/back/getTasks.php',
+          {
+            method: 'POST',
+            body: taskData,
+          }
+        );
+
+        const data = await response.json();
+        if (data.status === 'success') {
+          const updatedTasks = assignStartTimeAndDuration(
+            data.tasks.map((task) => ({
+              id: task.id || Math.random(),
+              name: task.taskName,
+              description: task.taskDesc,
+              priority: task.taskProi,
+              progress: 0,
+            }))
+          );
+          setTasks(updatedTasks);
+        } else {
+          toast.error(data.message || 'Failed to fetch tasks.', {
+            position: 'bottom-right',
+            autoClose: 3000,
+          });
+        }
+      } catch (error) {
+        toast.error('An error occurred while fetching tasks.', {
+          position: 'bottom-right',
+          autoClose: 3000,
+        });
+        console.error('Error fetching tasks:', error);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   const calculateProgress = useCallback((task) => {
-    const now = new Date().getTime();
-    const startTime = parseTime(task.time);
-    const endTime = startTime + task.duration * 60 * 1000;
-    if (now < startTime) return 0;
-    if (now > endTime) return 100;
+    const now = new Date();
+    const [time, modifier] = task.time.split(' '); // Split into time and AM/PM
+    let [hours, minutes] = time.split(':').map(Number);
+  
+    // Adjust hours for AM/PM
+    if (modifier === 'PM' && hours !== 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+  
+    // Create a Date object for the task's start time (today's date + task time)
+    const startTime = new Date();
+    startTime.setHours(hours, minutes, 0, 0);
+  
+    // Calculate the end time based on duration
+    const endTime = new Date(startTime.getTime() + task.duration * 60 * 1000);
+  
+    // Calculate progress
+    if (now < startTime) return 0; // Task hasn't started yet
+    if (now > endTime) return 100; // Task has completed
+  
+    // Calculate percentage of time elapsed
     const elapsedTime = now - startTime;
     const totalTime = endTime - startTime;
     return Math.min(100, (elapsedTime / totalTime) * 100);
   }, []);
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -259,7 +235,7 @@ function TaskSchedule() {
           progress: calculateProgress(task),
         }))
       );
-    },);
+    }, 10);
 
     return () => clearInterval(interval);
   }, [calculateProgress]);
@@ -273,7 +249,7 @@ function TaskSchedule() {
 
     setTasks((prevTasks) => {
       const taskToFinish = prevTasks.find((task) => task.id === taskId);
-      if (taskToFinish && !taskToFinish.finished) {
+      if (taskToFinish) {
         const updatedTasks = prevTasks.filter((task) => task.id !== taskId);
         setFinishedTasks((prevFinishedTasks) => [
           ...prevFinishedTasks,
@@ -283,39 +259,6 @@ function TaskSchedule() {
       }
       return prevTasks;
     });
-  };
-
-  const handleTaskEdit = (task) => {
-    setEditingTask(task);
-  };
-
-  const handleSaveEdit = (task) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((t) => (t.id === task.id ? { ...t, ...editingTask } : t))
-    );
-    setEditingTask(null);
-  };
-
-  const handleFeedbackChange = (taskId, value) => {
-    setFeedback((prevFeedback) => ({
-      ...prevFeedback,
-      [taskId]: value,
-    }));
-  };
-
-  const handleOpenModal = (taskId) => {
-    setFeedbackEditing(taskId);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setFeedbackEditing(null);
-  };
-
-  const handleFeedbackSave = (taskId) => {
-    setIsModalOpen(false);
-    setFeedbackEditing(null);
   };
 
   const getPriorityClass = (priority) => {
@@ -330,7 +273,16 @@ function TaskSchedule() {
         return '';
     }
   };
+  if (loading) {
+    return (
+      <div class="ts-loading-screen">
+  <h1>Welcome Back!</h1>
+  <p>Preparing your tasks for today. Please wait a moment...</p>
+  <div class="ts-spinner"></div>
+</div>
 
+    );
+  }
   return (
     <div className="ts-dashboard">
       <header className="ts-header">
@@ -339,180 +291,68 @@ function TaskSchedule() {
 
       <main className="ts-main">
         <div className="ts-columns">
-        <section className="ts-tasks">
-  <h2>Ongoing Tasks</h2>
-  {tasks.length > 0 ? (
-    <div className="ts-task-list">
-      {tasks
-        .slice()
-        .sort((a, b) => parseTime(a.time) - parseTime(b.time))
-        .map((task) => (
-          <div
-            key={task.id}
-            className={`ts-task-card ${getPriorityClass(task.priority)} ${
-              task.progress === 100 ? 'ts-task-complete' : ''
-            }`}
-          >
-            <div className="ts-task-content">
-              {editingTask?.id === task.id ? (
-                <div>
-                  <input
-                    type="text"
-                    className="ts-edit-input"
-                    value={editingTask.name}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, name: e.target.value })
-                    }
-                  />
-                  <input
-                    type="text"
-                    className="ts-edit-input"
-                    value={editingTask.time}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, time: e.target.value })
-                    }
-                  />
-                  <button
-                    className="ts-save-button"
-                    onClick={() => handleSaveEdit(task)}
+          <section className="ts-tasks">
+            <h2>Ongoing Tasks</h2>
+            {tasks.length > 0 ? (
+              <div className="ts-task-list">
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`ts-task-card ${getPriorityClass(task.priority)}`}
                   >
-                    <FaSave /> Save
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <h3>{task.name}</h3>
-                  <p>{task.description}</p>
-                  <div className="ts-task-meta">
-                    <span>
-                      <FaClock /> {task.time}
-                    </span>
-                    <span>
-                      <FaHourglassHalf /> {task.duration} mins
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="ts-task-actions">
-              <CircularProgress value={task.progress} />
-              <button
-                className="ts-edit-button"
-                onClick={() => handleTaskEdit(task)}
-              >
-                <FaEdit /> Edit
-              </button>
-            </div>
-            {task.progress === 100 && (
-              <div
-                className="ts-task-overlay"
-                onClick={() => handleTaskCompletion(task.id)}
-              >
-                <FaClipboardCheck className="ts-overlay-icon" />
-                <p className="ts-overlay-text p1">Mark as Done</p>
-              </div>
-            )}
-          </div>
-        ))}
-    </div>
-  ) : (
-    <p className="ts-no-tasks">No ongoing tasks.</p>
-  )}
-</section>
-
-<section className="ts-finished-tasks">
-<div className="ts-toggle-switch" onClick={() => setIsFinishedTasksOpen(!isFinishedTasksOpen)}>
-        <div className={`ts-switch-circle ${isFinishedTasksOpen ? 'active' : ''}`}>
-          {isFinishedTasksOpen ? <FaEyeSlash /> : <FaEye />}
-        </div>
-        <span className="ts-switch-label">
-          {isFinishedTasksOpen ? 'Hide Completed Tasks' : 'Show Completed Tasks'}
-        </span>
-      </div>
-
-      {isFinishedTasksOpen && (
-        <div className="ts-finished-list-superior">
-          {finishedTasks.length > 0 ? (
-            finishedTasks.map((task) => (
-              <div key={task.id} className="ts-finished-card-elite">
-                {/* Card Header */}
-                <div className={`ts-card-header-elite ${task.priority.toLowerCase()}-priority`}>
-                  <span className="ts-card-title-elite">{task.name}</span>
-                  <span className="ts-completed-time-elite">
-                    <FaCheckCircle className="ts-check-icon-elite" /> {task.completionTime}
-                  </span>
-                </div>
-
-                {/* Task Details */}
-                <div className="ts-card-body-elite">
-                  <div className="ts-task-details-elite">
-                    <p className="ts-description-elite">{task.description}</p>
-                    <div className="ts-meta-info-elite">
-                      <span className="ts-meta-item-elite">
-                        <FaClock /> {task.duration} mins
+                    <div className="ts-task-row ts-task-name">{task.name}</div>
+                    <div className="ts-task-row ts-task-description">
+                      {task.description}
+                    </div>
+                    <div className="ts-task-row ts-task-meta">
+                      <span>
+                        <FaClock /> {task.time}
                       </span>
-                      <span className={`ts-priority-badge-elite ${task.priority.toLowerCase()}-badge`}>
-                        <FaFlag /> {task.priority} Priority
+                      <span>
+                        <FaHourglassHalf /> {task.duration} mins
                       </span>
                     </div>
+                    <div className="ts-task-actions">
+                      <CircularProgress value={task.progress} />
+                    </div>
+                    {task.progress === 100 && (
+                      <div
+                        className="ts-task-overlay"
+                        onClick={() => handleTaskCompletion(task.id)}
+                      >
+                        <FaClipboardCheck /> Mark as Done
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                {/* Feedback Section */}
-                <div className="ts-feedback-container-elite">
-                  <h4 className="ts-feedback-title-elite">Feedback</h4>
-                  <div className="ts-feedback-box-elite">
-                    <FaCommentDots className="ts-feedback-icon-elite" />
-                    <p className="ts-feedback-text-elite">
-                      {feedback[task.id] || 'No feedback provided yet.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="ts-card-actions-elite">
-                  <button
-                    className="ts-edit-feedback-button-elite"
-                    onClick={() => handleOpenModal(task.id)}
-                  >
-                    <FaEdit /> Edit Feedback
-                  </button>
-                </div>
+                ))}
               </div>
-            ))
-          ) : (
-            <p className="ts-no-tasks-elite">No tasks have been completed yet.</p>
-          )}
-        </div>
-      )}
-    </section>
-        </div>
+            ) : (
+              <p>No ongoing tasks.</p>
+            )}
+          </section>
 
-        {isModalOpen && (
-          <div className="ts-modal-overlay">
-            <div className="ts-modal">
-              <button className="ts-modal-close" onClick={handleCloseModal}>
-                <FaTimes />
-              </button>
-              <h3>Edit Feedback</h3>
-              <input
-                type="text"
-                className="ts-modal-input"
-                placeholder="Leave feedback"
-                value={feedback[feedbackEditing] || ''}
-                onChange={(e) =>
-                  handleFeedbackChange(feedbackEditing, e.target.value)
-                }
-              />
-              <button
-                className="ts-modal-save"
-                onClick={() => handleFeedbackSave(feedbackEditing)}
-              >
-                <FaSave /> Save Changes
-              </button>
-            </div>
-          </div>
-        )}
+          <section className="ts-finished-tasks">
+            <h2>Finished Tasks</h2>
+            {finishedTasks.length > 0 ? (
+              <div className="ts-task-list">
+                {finishedTasks.map((task) => (
+                  <div key={task.id} className="ts-finished-card">
+                    <h3>{task.name}</h3>
+                    <p>{task.description}</p>
+                    <div className="ts-task-meta">
+                      <span>Completed at: {task.completionTime}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No finished tasks.</p>
+            )}
+          </section>
+        </div>
       </main>
+
+      <ToastContainer />
     </div>
   );
 }
