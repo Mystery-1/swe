@@ -1,359 +1,518 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import '../style/s2.css';
-import { FaClock, FaHourglassHalf, FaClipboardCheck } from 'react-icons/fa';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-function CircularProgress({ value }) {
-  const radius = 54;
-  const strokeWidth = 8;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (value / 100) * circumference;
-
-  return (
-    <svg
-      className="ts-progress-circle"
-      viewBox="0 0 120 120"
-      width="120"
-      height="120"
-    >
-      <circle
-        cx="50%"
-        cy="50%"
-        r={radius}
-        strokeWidth={strokeWidth}
-        fill="none"
-        stroke="#e6e6e6"
-        style={{ strokeLinecap: 'round' }}
-      />
-      <circle
-        cx="50%"
-        cy="50%"
-        r={radius}
-        strokeWidth={strokeWidth}
-        fill="none"
-        stroke="#007BFF"
-        strokeDasharray={circumference}
-        strokeDashoffset={strokeDashoffset}
-        style={{
-          strokeLinecap: 'round',
-          transform: 'rotate(-90deg)',
-          transformOrigin: 'center',
-        }}
-      />
-      <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontSize="18"
-        fill="#333"
-        fontWeight="bold"
-      >
-        {Math.round(value)}%
-      </text>
-    </svg>
-  );
-}
-
-function assignStartTimeAndDuration(tasks) {
-  const startingHour = 12; // Tasks start at 12:00 PM
-  const startingMinute = 0;
-  const defaultDuration = 30; // Default duration in minutes for tasks
-  const taskGap = 5; // Gap in minutes between tasks
-
-  // Group tasks by priority
-  const highPriorityTasks = tasks.filter(task => task.priority === 'High');
-  const lowPriorityTasks = tasks.filter(task => task.priority === 'Low');
-  const mediumPriorityTasks = tasks.filter(task => task.priority === 'Medium');
-
-  // Arrange tasks in the specified pattern
-  const arrangedTasks = [];
-  let highIndex = 0,
-    lowIndex = 0,
-    mediumIndex = 0;
-
-  while (
-    highIndex < highPriorityTasks.length ||
-    lowIndex < lowPriorityTasks.length ||
-    mediumIndex < mediumPriorityTasks.length
-  ) {
-    if (highIndex < highPriorityTasks.length) {
-      arrangedTasks.push(highPriorityTasks[highIndex++]);
-    }
-    if (lowIndex < lowPriorityTasks.length) {
-      arrangedTasks.push(lowPriorityTasks[lowIndex++]);
-    }
-    if (mediumIndex < mediumPriorityTasks.length) {
-      arrangedTasks.push(mediumPriorityTasks[mediumIndex++]);
-    }
-    if (mediumIndex < mediumPriorityTasks.length) {
-      arrangedTasks.push(mediumPriorityTasks[mediumIndex++]);
-    }
-  }
-
-  let currentTime = new Date();
-  currentTime.setHours(startingHour, startingMinute, 0, 0); // Set start time to 12:00 PM
-
-  return arrangedTasks.map(task => {
-    const startTime = new Date(currentTime);
-
-    // Assign task duration based on priority
-    let duration;
-    switch (task.priority) {
-      case 'High':
-        duration = 120; // 2 hours for high-priority tasks
-        break;
-      case 'Medium':
-        duration = 75; // 1 hour 15 minutes for medium-priority tasks
-        break;
-      case 'Low':
-        duration = 40; // 40 minutes for low-priority tasks
-        break;
-      default:
-        duration = defaultDuration;
-    }
-
-    // Update current time for the next task
-    currentTime.setMinutes(currentTime.getMinutes() + duration + taskGap);
-
-    // Format the start time as a string (e.g., "12:00 PM")
-    const formattedStartTime = startTime.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-
-    return {
-      ...task,
-      time: formattedStartTime, // Assign formatted start time
-      duration, // Assign duration
-    };
-  });
-}
-
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  Card,
+  CardContent,
+  Button,
+  Grid,
+  TextField,
+  InputAdornment,
+  Box,
+  LinearProgress,
+  Chip,
+} from "@mui/material";
+import {
+  Search as SearchIcon,
+} from "@mui/icons-material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Grow } from "@mui/material";
+import { motion } from "framer-motion";
 
 function TaskSchedule() {
   const [tasks, setTasks] = useState([]);
-  const [finishedTasks, setFinishedTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [gptCalled, setGptCalled] = useState(false);
 
-  useEffect(() => {
-    // Simulate a 3-second loading delay
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const userEmail = localStorage.getItem('user_email');
+  const fetchTasksFromDatabase = async () => {
+    try {
+      const userEmail = localStorage.getItem("user_email");
       if (!userEmail) {
-        toast.error('User email is missing.', {
-          position: 'bottom-right',
-          autoClose: 3000,
+        toast.error("User email is missing.", { position: "bottom-right" });
+        return [];
+      }
+
+      const formData = new FormData();
+      formData.append("user_email", userEmail);
+
+      const response = await fetch(
+        "http://localhost/SWE-444/my-app/src/back/getTasks.php",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      if (data.status === "success") {
+        return data.tasks.map((task, index) => ({
+          ...task,
+          progress: 0, 
+          id: task.id || task.task_id || index, 
+        }));
+      } else {
+        toast.error(data.message || "Failed to fetch tasks.", {
+          position: "bottom-right",
         });
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      toast.error("Error fetching tasks from database.", {
+        position: "bottom-right",
+      });
+      return [];
+    }
+  };
+
+  const sendTasksToPhpAndFetchUpdatedTasks = async (tasksNeedingEstimation) => {
+    try {
+      const response = await fetch(
+        "http://localhost/SWE-444/my-app/src/back/gpt1.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tasksNeedingEstimation),
+        }
+      );
+
+      const data = await response.json();
+      if (data.status === "success") {
+        const updatedTasks = data.tasks.map((task, index) => ({
+          ...task,
+          progress: 0,
+          id: task.id || task.task_id || index, // Assign unique ID
+        }));
+        setTasks((prevTasks) => {
+          // Merge updated tasks with existing ones
+          const taskMap = {};
+          prevTasks.forEach((task) => {
+            taskMap[task.id] = task;
+          });
+          updatedTasks.forEach((task) => {
+            taskMap[task.id] = task;
+          });
+          return Object.values(taskMap);
+        });
+      } else {
+        toast.error(data.message || "Failed to process tasks.", {
+          position: "bottom-right",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing tasks:", error);
+      toast.error("Error processing tasks.", { position: "bottom-right" });
+    }
+  };
+
+  const handleSaveSchedule = async () => {
+    try {
+      const userEmail = localStorage.getItem("user_email");
+      if (!userEmail) {
+        toast.error("User email is missing.", { position: "bottom-right" });
         return;
       }
 
-      const taskData = new FormData();
-      taskData.append('user_email', userEmail);
-
-      try {
-        const response = await fetch(
-          'http://localhost/SWE-444/my-app/src/back/getTasks.php',
-          {
-            method: 'POST',
-            body: taskData,
-          }
-        );
-
-        const data = await response.json();
-        if (data.status === 'success') {
-          const updatedTasks = assignStartTimeAndDuration(
-            data.tasks.map((task) => ({
-              id: task.id || Math.random(),
-              name: task.taskName,
-              description: task.taskDesc,
-              priority: task.taskProi,
-              progress: 0,
-            }))
-          );
-          setTasks(updatedTasks);
-        } else {
-          toast.error(data.message || 'Failed to fetch tasks.', {
-            position: 'bottom-right',
-            autoClose: 3000,
-          });
+      const response = await fetch(
+        "http://localhost/SWE-444/my-app/src/back/saveSchedule.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_email: userEmail, tasks }),
         }
-      } catch (error) {
-        toast.error('An error occurred while fetching tasks.', {
-          position: 'bottom-right',
-          autoClose: 3000,
+      );
+
+      const data = await response.json();
+      if (data.status === "success") {
+        toast.success("Schedule saved successfully!", {
+          position: "bottom-right",
         });
-        console.error('Error fetching tasks:', error);
+        window.location.reload();
+      } else {
+        toast.error(data.message || "Failed to save schedule.", {
+          position: "bottom-right",
+        });
       }
-    };
+    } catch (error) {
+      console.error("Error saving schedule:", error);
+      toast.error("Error saving schedule.", { position: "bottom-right" });
+    }
+  };
 
-    fetchTasks();
-  }, []);
+  const handleMarkAsDone = (taskId) => {
+    console.log("Marking task as done:", taskId);
+    if (!completedTasks.includes(taskId)) {
+      setCompletedTasks([...completedTasks, taskId]);
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, progress: 100 } : task
+        )
+      );
+    }
+  };
 
-  const calculateProgress = useCallback((task) => {
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+useEffect(() => {
+  // Define the function to trigger the PHP script
+  const triggerTaskReminder = async () => {
+      try {
+          const response = await fetch('http://localhost/SWE-444/my-app/src/back/sendTaskEmails.php', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+          });
+
+          if (response.ok) {
+              const data = await response.json();
+              console.log('Response:', data);
+          } else {
+              console.error('Failed to send task reminders:', response.status);
+          }
+      } catch (error) {
+          console.error('Error while triggering task reminders:', error);
+      }
+  };
+
+  // Call the function every 1 minute
+  const intervalId = setInterval(() => {
+      triggerTaskReminder();
+  }, 6000); 
+
+  return () => clearInterval(intervalId);
+}, []);
+
+  const parseTime = (timeStr) => {
+    if (!timeStr) return null; 
+    const [hours, minutes] = timeStr.split(":").map(Number);
+
+    const adjustedHours = hours < 5 ? hours + 24 : hours;
+    return adjustedHours * 60 + minutes;
+  };
+
+  const getTaskProgress = (task) => {
+    const startTimeStr = task.startTime;
+    const durationMinutes = parseInt(task.duration, 10);
+
+    if (!startTimeStr || isNaN(durationMinutes) || durationMinutes <= 0) {
+      return 0;
+    }
+
     const now = new Date();
-    const [time, modifier] = task.time.split(' '); // Split into time and AM/PM
-    let [hours, minutes] = time.split(':').map(Number);
-  
-    // Adjust hours for AM/PM
-    if (modifier === 'PM' && hours !== 12) hours += 12;
-    if (modifier === 'AM' && hours === 12) hours = 0;
-  
-    // Create a Date object for the task's start time (today's date + task time)
-    const startTime = new Date();
-    startTime.setHours(hours, minutes, 0, 0);
-  
-    // Calculate the end time based on duration
-    const endTime = new Date(startTime.getTime() + task.duration * 60 * 1000);
-  
-    // Calculate progress
-    if (now < startTime) return 0; // Task hasn't started yet
-    if (now > endTime) return 100; // Task has completed
-  
-    // Calculate percentage of time elapsed
-    const elapsedTime = now - startTime;
-    const totalTime = endTime - startTime;
-    return Math.min(100, (elapsedTime / totalTime) * 100);
-  }, []);
-  
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
+    const [startHours, startMinutes] = startTimeStr.split(":").map(Number);
+    let taskStartMinutes = startHours * 60 + startMinutes;
+
+    if (startHours < 5) {
+      taskStartMinutes += 24 * 60;
+    }
+
+    const taskEndMinutes = taskStartMinutes + durationMinutes;
+
+    let adjustedCurrentMinutes = currentMinutes;
+    if (currentMinutes < 5 * 60) {
+      adjustedCurrentMinutes += 24 * 60;
+    }
+
+    if (adjustedCurrentMinutes < taskStartMinutes) {
+      return 0;
+    } else if (adjustedCurrentMinutes >= taskEndMinutes) {
+      return 100;
+    } else {
+      const progress =
+        ((adjustedCurrentMinutes - taskStartMinutes) / durationMinutes) * 100;
+      return Math.min(Math.max(progress, 0), 100);
+    }
+  };
+
+  // Update progress every minute
   useEffect(() => {
-    const interval = setInterval(() => {
+    const updateProgress = () => {
       setTasks((prevTasks) =>
         prevTasks.map((task) => ({
           ...task,
-          progress: calculateProgress(task),
+          progress: completedTasks.includes(task.id)
+            ? 100
+            : getTaskProgress(task),
         }))
       );
-    }, 10);
+    };
+
+    updateProgress();
+    const interval = setInterval(updateProgress, 1); 
 
     return () => clearInterval(interval);
-  }, [calculateProgress]);
+  }, [completedTasks]);
 
-  const handleTaskCompletion = (taskId) => {
-    const completionTime = new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
+  useEffect(() => {
+    const fetchAndProcessTasks = async () => {
+      setLoading(true);
+      const fetchedTasks = await fetchTasksFromDatabase();
+      const tasksNeedingEstimation = fetchedTasks.filter(
+        (task) => task.duration === "0" || !task.duration
+      );
 
-    setTasks((prevTasks) => {
-      const taskToFinish = prevTasks.find((task) => task.id === taskId);
-      if (taskToFinish) {
-        const updatedTasks = prevTasks.filter((task) => task.id !== taskId);
-        setFinishedTasks((prevFinishedTasks) => [
-          ...prevFinishedTasks,
-          { ...taskToFinish, completionTime },
-        ]);
-        return updatedTasks;
+      if (tasksNeedingEstimation.length > 0) {
+        await sendTasksToPhpAndFetchUpdatedTasks(tasksNeedingEstimation);
+        setGptCalled(true); // GPT was called
+      } else {
+        setTasks(fetchedTasks);
+        setGptCalled(false); // GPT was not called
       }
-      return prevTasks;
-    });
-  };
+      setLoading(false);
+    };
+    fetchAndProcessTasks();
+  }, []);
 
-  const getPriorityClass = (priority) => {
-    switch (priority) {
-      case 'High':
-        return 'ts-high-priority';
-      case 'Medium':
-        return 'ts-medium-priority';
-      case 'Low':
-        return 'ts-low-priority';
+  const filteredTasks = tasks
+    .filter((task) =>
+      task.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const timeA = parseTime(a.startTime);
+      const timeB = parseTime(b.startTime);
+
+      if (timeA === null && timeB === null) return 0;
+      if (timeA === null) return 1; 
+      if (timeB === null) return -1;
+      return timeA - timeB;
+    });
+
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: "#0D47A1",
+      },
+      secondary: {
+        main: "#0D47A1",
+      },
+      error: {
+        main: "#D32F2F",
+      },
+      background: {
+        default: "#F5F5F5",
+      },
+    },
+    typography: {
+      fontFamily: "Roboto, sans-serif",
+    },
+  });
+
+  const getPriorityColor = (priority) => {
+    switch (priority.toLowerCase()) {
+      case "high":
+        return "red";
+      case "medium":
+        return "orange";
+      case "low":
+        return "green";
       default:
-        return '';
+        return theme.palette.text.primary;
     }
   };
+  
   if (loading) {
     return (
-      <div class="ts-loading-screen">
-  <h1>Welcome Back!</h1>
-  <p>Preparing your tasks for today. Please wait a moment...</p>
-  <div class="ts-spinner"></div>
-</div>
-
+      <Container style={{ textAlign: "center", marginTop: "10rem" }}>
+        <Typography variant="h6" style={{ marginTop: "10rem" }}>
+          Loading tasks...
+        </Typography>
+        <CircularProgress />
+      </Container>
     );
   }
+
   return (
-    <div className="ts-dashboard">
-      <header className="ts-header">
-        <h1>Task Scheduler</h1>
-      </header>
+    <ThemeProvider theme={theme}>
+      <React.Fragment>
+        <Container maxWidth="md" style={{ marginTop: "6rem" }}>
+          <TextField
+            fullWidth
+            placeholder="Search tasks..."
+            variant="outlined"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            style={{ marginBottom: "2rem" }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-      <main className="ts-main">
-        <div className="ts-columns">
-          <section className="ts-tasks">
-            <h2>Ongoing Tasks</h2>
-            {tasks.length > 0 ? (
-              <div className="ts-task-list">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={`ts-task-card ${getPriorityClass(task.priority)}`}
-                  >
-                    <div className="ts-task-row ts-task-name">{task.name}</div>
-                    <div className="ts-task-row ts-task-description">
-                      {task.description}
-                    </div>
-                    <div className="ts-task-row ts-task-meta">
-                      <span>
-                        <FaClock /> {task.time}
-                      </span>
-                      <span>
-                        <FaHourglassHalf /> {task.duration} mins
-                      </span>
-                    </div>
-                    <div className="ts-task-actions">
-                      <CircularProgress value={task.progress} />
-                    </div>
-                    {task.progress === 100 && (
-                      <div
-                        className="ts-task-overlay"
-                        onClick={() => handleTaskCompletion(task.id)}
+          {filteredTasks.length === 0 ? (
+            <Typography variant="h6" align="center">
+              No tasks found.
+            </Typography>
+          ) : (
+            <>
+              <Grid container spacing={4}>
+                {filteredTasks.map((task) => {
+                  const isCompleted = completedTasks.includes(task.id);
+                  const progress = isCompleted ? 100 : task.progress || 0;
+
+                  // Determine progress bar color
+                  let progressColor = "primary";
+                  if (progress >= 100 && !isCompleted) {
+                    progressColor = "error"; // Task is overdue
+                  }
+
+                  return (
+                    <Grow in={true} timeout={500} key={task.id}>
+                    <Grid item xs={12} sm={6} md={4} key={task.id}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Card
+                        style={{
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                          backgroundColor: isCompleted
+                            ? "#E0E0E0"
+                            : "#FFFFFF",
+                          position: "relative",
+                        }}
                       >
-                        <FaClipboardCheck /> Mark as Done
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No ongoing tasks.</p>
-            )}
-          </section>
+                        <CardContent style={{ flexGrow: 1 }}>
+                          {isCompleted && (
+                            <Chip
+                              label="Completed"
+                              color="success"
+                              style={{
+                                position: "absolute",
+                                top: 16,
+                                right: 16,
+                              }}
+                            />
+                          )}
+                          <Box
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: "1rem",
+                            }}
+                          >
+                            <Box
+                              style={{
+                                backgroundColor: theme.palette.primary.main,
+                                color: "#fff",
+                                borderRadius: "8px",
+                                width: 40,
+                                height: 40,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginRight: "1rem",
+                                fontSize: "1.2rem",
+                              }}
+                            >
+                              {task.name.charAt(0).toUpperCase()}
+                            </Box>
+                            <Typography variant="h6">{task.name}</Typography>
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            color="textSecondary"
+                            style={{ marginBottom: "1rem" }}
+                          >
+                            {task.description}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            style={{ marginBottom: "0.5rem" }}
+                          >
+                            <strong>Priority:</strong>{" "}
+                            <span
+                              style={{ color: getPriorityColor(task.priority) }}
+                            >
+                              {task.priority}
+                            </span>
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            style={{ marginBottom: "0.5rem" }}
+                          >
+                            <strong>Start Time:</strong>{" "}
+                            {task.startTime || "N/A"}
+                          </Typography>
+                          <Typography variant="body2">
+                            <strong>Duration:</strong> {task.duration} minutes
+                          </Typography>
+                        </CardContent>
+                        <Box style={{ padding: "0 16px 16px" }}>
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            style={{ marginBottom: "0.5rem" }}
+                          >
+                            <Box width="100%" mr={1}>
+                              <LinearProgress
+                                variant="determinate"
+                                value={progress}
+                                color={progressColor}
+                              />
+                            </Box>
+                            <Box minWidth={35}>
+                              <Typography
+                                variant="body2"
+                                color="textSecondary"
+                              >{`${Math.round(progress)}%`}</Typography>
+                            </Box>
+                          </Box>
+                          {!isCompleted && (
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={() => handleMarkAsDone(task.id)}
+                              fullWidth
+                            >
+                              Mark as Done
+                            </Button>
+                          )}
+                        </Box>
+                      </Card>
+                      </motion.div>
+                    </Grid>
+                    </Grow>
+                  );
+                })}
+                
+              </Grid>
 
-          <section className="ts-finished-tasks">
-            <h2>Finished Tasks</h2>
-            {finishedTasks.length > 0 ? (
-              <div className="ts-task-list">
-                {finishedTasks.map((task) => (
-                  <div key={task.id} className="ts-finished-card">
-                    <h3>{task.name}</h3>
-                    <p>{task.description}</p>
-                    <div className="ts-task-meta">
-                      <span>Completed at: {task.completionTime}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No finished tasks.</p>
-            )}
-          </section>
-        </div>
-      </main>
-
-      <ToastContainer />
-    </div>
+              {/* Conditionally render the Save Schedule button */}
+              {gptCalled && (
+                <Box mt={4} display="flex" justifyContent="center">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    onClick={handleSaveSchedule}
+                  >
+                    Save Schedule
+                  </Button>
+                </Box>
+              )}
+            </>
+          )}
+          <ToastContainer />
+        </Container>
+      </React.Fragment>
+    </ThemeProvider>
   );
 }
 
