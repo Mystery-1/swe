@@ -1,0 +1,40 @@
+<?php
+require '../vendor/autoload.php';
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+$mail = new PHPMailer(true);
+
+try {
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'iiferas07@gmail.com';
+    $mail->Password = '';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
+    $mail->SMTPDebug = 2; 
+    $mail->Debugoutput = 'html';
+    
+    $mail->setFrom('iiferas07@gmail.com', 'Task Scheduler');
+    $mail->addAddress($userEmail); 
+
+    $mail->isHTML(true);
+    $mail->Subject = 'Task Scheduler'; 
+    $mail->isHTML(true);
+    $mail->Body = '
+        <p>Dear User,</p>
+        <p>Your scheduled task <strong>"$taskName"</strong> has started at $taskTime.</p>
+        <p>Best regards,<br>Task Scheduler</p>
+    ';
+    $mail->send();
+    echo 'Email sent successfully';
+} catch (Exception $e) {
+    echo "Email could not be sent. Mailer Error: {$mail->ErrorInfo}";
+}
+
+?>
